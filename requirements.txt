@@ -1,0 +1,11 @@
+streamlit
+ultralytics
+transformers
+faiss-cpu
+accelerate
+bitsandbytes
+torch
+torchvision
+opencv-python-headless
+Pillow
+numpy
