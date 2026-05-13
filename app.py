@@ -44,15 +44,25 @@ if "last_uploaded" not in st.session_state:
 def load_yolo():
     return YOLO("yolov8n.pt")
 
-@st.cache_resource(show_spinner="Loading BLIP-2 (8-bit) …")
+# @st.cache_resource(show_spinner="Loading BLIP-2 (8-bit) …")
+# def load_blip2():
+#     processor = Blip2Processor.from_pretrained("Salesforce/blip2-opt-2.7b")
+#     quant_cfg = BitsAndBytesConfig(load_in_8bit=True)
+#     model = Blip2ForConditionalGeneration.from_pretrained(
+#         "Salesforce/blip2-opt-2.7b",
+#         quantization_config=quant_cfg,
+#         device_map="auto",
+#     )
+#     return processor, model
+@st.cache_resource(show_spinner="Loading BLIP-2 (CPU Safe) …")
 def load_blip2():
     processor = Blip2Processor.from_pretrained("Salesforce/blip2-opt-2.7b")
-    quant_cfg = BitsAndBytesConfig(load_in_8bit=True)
+    
+    # Removed bitsandbytes and device_map for CPU compatibility
     model = Blip2ForConditionalGeneration.from_pretrained(
-        "Salesforce/blip2-opt-2.7b",
-        quantization_config=quant_cfg,
-        device_map="auto",
-    )
+        "Salesforce/blip2-opt-2.7b"
+    ).to(device) # This forces it onto your CPU if no CUDA is found
+    
     return processor, model
 
 @st.cache_resource(show_spinner="Loading CLIP …")
