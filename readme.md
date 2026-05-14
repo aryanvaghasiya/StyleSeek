@@ -1,4 +1,4 @@
-# Visual Product Search Engine
+# StyleSeek - Visual Product Search Engine
 
 Visual Recognition Course Project
 
