@@ -118,6 +118,7 @@ can be also be viewed on
 ```bash
  https://huggingface.co/spaces/aryanvaghasiya/StyleSeek
 ```
+Visualization on app can be improved by adding the deepfashion dataset in the root project folder.
 ---
 
 # Authors
