@@ -114,7 +114,7 @@ Tested on:
 * CUDA-enabled NVIDIA GPU
 
 The project can also run on CPU(current configuration). the blip part may take 15-20 seconds
-
+can be also be viewed on https://huggingface.co/spaces/aryanvaghasiya/StyleSeek
 ---
 
 # Authors
