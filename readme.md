@@ -113,7 +113,7 @@ Tested on:
 * Python 3.10
 * CUDA-enabled NVIDIA GPU
 
-The project can also run on CPU(current configuration).
+The project can also run on CPU(current configuration). the blip part may take 15-20 seconds
 
 ---
 
