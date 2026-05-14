@@ -38,9 +38,9 @@ if "last_uploaded" not in st.session_state:
 # ==========================================
 # 2. MODEL LOADING (CACHED)
 # ==========================================
-@st.cache_resource(show_spinner="Loading YOLOv8 …")
+@st.cache_resource(show_spinner="Loading Clothing Detector …")
 def load_yolo():
-    return YOLO("yolov8n.pt")
+    return YOLO("best.pt")
 
 @st.cache_resource(show_spinner="Loading BLIP-2 (CPU Safe) …")
 def load_blip2():
@@ -66,19 +66,48 @@ def load_index(index_dir):
 # ==========================================
 # 3. PIPELINE HELPERS
 # ==========================================
+
+# Classes produced by kesimeg/yolov8n-clothing-detection
+ALLOWED_CLASSES = [
+    "Clothing",
+    "Accessories",
+    "Shoes",
+    "Bags",
+]
+
+def get_region_type(y1, y2, img_height):
+    """Map a bounding box to Upper Body / Lower Body / Full Body."""
+    center_y = (y1 + y2) / 2
+    if center_y < img_height * 0.45:
+        return "Upper Body"
+    elif center_y > img_height * 0.60:
+        return "Lower Body"
+    else:
+        return "Full Body"
+
+
 def detect_clothing_regions(yolo_model, img_rgb):
     """
-    Detect ALL clothing regions instead of only best box.
-    Returns list of detections.
+    Detect ALL clothing regions using the fashion-aware YOLO model.
+    Filters to ALLOWED_CLASSES only and tags each detection with a
+    body-region label (Upper Body / Lower Body / Full Body).
+    Returns a list of detection dicts.
     """
     results = yolo_model(img_rgb, verbose=False)[0]
-
+    height = img_rgb.shape[0]
     detections = []
 
     for box in results.boxes:
         conf = float(box.conf[0])
 
-        if conf < 0.5:
+        if conf < 0.4:
+            continue
+
+        cls_id = int(box.cls[0])
+        label = yolo_model.names[cls_id]
+
+        # Only keep fashion-relevant classes
+        if label not in ALLOWED_CLASSES:
             continue
 
         x1, y1, x2, y2 = map(int, box.xyxy[0])
@@ -87,14 +116,14 @@ def detect_clothing_regions(yolo_model, img_rgb):
         if crop.size == 0:
             continue
 
-        cls_id = int(box.cls[0])
-        label = yolo_model.names[cls_id]
+        region_type = get_region_type(y1, y2, height)
 
         detections.append({
             "label": label,
             "confidence": conf,
             "bbox": (x1, y1, x2, y2),
-            "crop": crop
+            "crop": crop,
+            "region_type": region_type,
         })
 
     return detections
@@ -167,6 +196,8 @@ if uploaded is not None:
 
     # --- STEP 2: Run YOLO Detection ---
     yolo = load_yolo()
+    print(yolo.names)  # prints {0: 'Clothing', 1: 'Shoes', ...}
+    
     detections = detect_clothing_regions(yolo, img_rgb)
 
     # --- STEP 3: Show All Detected Regions ---
@@ -187,7 +218,7 @@ if uploaded is not None:
 
         cv2.putText(
             disp,
-            f'{det["label"]} {det["confidence"]:.2f}',
+            f'{det["label"]} | {det["region_type"]} {det["confidence"]:.2f}',
             (x1, y1 - 10),
             cv2.FONT_HERSHEY_SIMPLEX,
             0.6,
@@ -214,7 +245,7 @@ if uploaded is not None:
         for i, det in enumerate(detections):
             option_text = (
                 f'{i + 1}. '
-                f'{det["label"]} '
+                f'{det["label"]} — {det["region_type"]} '
                 f'(conf={det["confidence"]:.2f})'
             )
             options.append(option_text)
@@ -233,7 +264,10 @@ if uploaded is not None:
             selected_crop = detections[selected_idx]["crop"]
             st.image(
                 selected_crop,
-                caption=f"Selected Search Region: {detections[selected_idx]['label']}",
+                caption=(
+                    f"Selected: {detections[selected_idx]['label']} "
+                    f"— {detections[selected_idx]['region_type']}"
+                ),
                 use_container_width=True
             )
         else:
