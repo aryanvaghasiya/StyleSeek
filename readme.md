@@ -94,7 +94,17 @@ http://localhost:8501
 6. Top-K results are displayed
 
 ---
-
+# Running the Evaluation Demo
+* To run a demonstration of the batch evaluation pipeline (batchEval.py), 
+  use the (`demoeval.py`) script. This script tests the end-to-end retrieval system and computes performance metrics 
+  like Recall@K, NDCG@K, and mAP@K.
+* Use the following command in project folder along with path the DeepFashion image dataset:
+```bash
+ python batchEval.py \
+    --dataset_root /path/to/deepfashion \
+    --partition_file /path/to/list_eval_partition.txt
+```
+---
 
 # Notes
 
